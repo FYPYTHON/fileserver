@@ -1,0 +1,171 @@
+
+var GetMapValueByKey = myfunc.GetMapValueByKey
+var InterfaceFloat64ToInt64 = myfunc.InterfaceFloat64ToInt64
+var Json2map = myweb.Json2map
+
+
+func getToken() string{
+	httprequest := myweb.HttpRequest{
+		"http://127.0.0.1:9080",
+		"/login",
+	}
+	data := url.Values{}
+	data.Add("inputCode", "APP")
+	data.Add("password", "1234")
+	data.Add("userAccount", "Test")
+	str := httprequest.PostNew(data)
+	jsondata := Json2map([]byte(str))
+	fmt.Println(jsondata)
+	user := GetMapValueByKey(jsondata, "user")
+	error_code := GetMapValueByKey(jsondata, "error_code")
+	if InterfaceFloat64ToInt64(error_code) == 0 {
+		fmt.Println("get token ok", user)
+		var token = GetMapValueByKey(jsondata, "token")
+		//fmt.Println(reflect.TypeOf(token))
+		return token.(string)
+	} else {
+		fmt.Println("get token error", user)
+		return ""
+	}
+}
+
+func getVer(token string) string {
+	httprequest := myweb.HttpRequest{
+		"http://127.0.0.1:9080",
+		"/app/view",
+	}
+	data := url.Values{}
+	data.Add("jid", "1717")
+	data.Add("token", token)
+	data.Add("loginname", "Tornado")
+	//str := httprequest.GetNew(data)
+	str := httprequest.GetNew(data)
+	jsondata := Json2map([]byte(str))
+	// fmt.Println(jsondata)
+	error_code := GetMapValueByKey(jsondata, "error_code")
+	if InterfaceFloat64ToInt64(error_code) == 0 {
+		var msg = GetMapValueByKey(jsondata, "msg")
+		jmap := GetMapValueByKey(jsondata, "jdata")
+		//fmt.Println("return jdata:", jmap)
+		//fmt.Println(reflect.TypeOf(jmap) == reflect.TypeOf(jsondata))
+		//jdate := GetMapValueByKey(jmap, "jdate")
+		sjmap := jmap.(map[string] interface{})
+		// fmt.Println(sjmap)
+		jdate := GetMapValueByKey(sjmap, "jdate")
+		jvalue := GetMapValueByKey(sjmap, "jvalue")
+		//fmt.Println(jdate)
+		//fmt.Println(jvalue)
+		// fmt.Println(reflect.TypeOf(jdate))
+		ljvalue := jvalue.([] interface{})
+		ljdate := jdate.([] interface{})
+		// fmt.Println(reflect.TypeOf(ljvalue))
+		// fmt.Println(len(ljvalue))
+		for _, v := range ljvalue{
+			fmt.Println(v)
+		}
+		for i, j := range ljdate {
+			fmt.Println(i,j, ljdate[i])
+		}
+		return msg.(string)
+	} else {
+		fmt.Println("get ver error")
+		return ""
+	}
+}
+func sayhelloName(w http.ResponseWriter, r *http.Request){
+	_ = r.ParseForm()
+	fmt.Println(r.Form)
+	logs.Info("r.Form", r.Form)
+	logs.Info("path", r.URL.Path)
+	logs.Info("scheme", r.URL.Scheme)
+	for k, v := range r.Form {
+		logs.Info("key:", k)
+		logs.Info("value:", strings.Join(v, ""))
+	}
+	_, _ = fmt.Fprintf(w, "hello go web")
+}
+
+
+//type MainController struct {
+//	beego.Controller
+//}
+//func (this *MainController) Get(){
+//	fmt.Println("tis", this.Ctx.Request.Method)
+//	fmt.Println(this.GetString("param"))
+//	fmt.Println(this.GetString(":param"))
+//	this.Ctx.WriteString("hello word")
+//}
+//func (this *MainController) Home() {
+//	fmt.Println(this.GetString("param"))
+//	fmt.Println(this.GetString(":param"))
+//	this.Ctx.WriteString( this.Ctx.Request.Method + " -> home" + "" +
+//		": param=" + this.GetString(":param"))
+//}
+
+//mux := &myweb.MyMux{}
+	//	//_ = http.ListenAndServe(":9090", mux)
+	//router := myweb.New()
+	//router.GET("/hello/:name", Hello)
+	//_ = http.ListenAndServe(":8080", router)
+	//mylog.Info.Println("server go")
+
+	// log config
+	//logconfig := make(map[string] interface{})
+	//logconfig["filename"] = "/opt/log/gofs/log.log"
+	//logconfig["maxsize"] = 52428800  // 50 MB
+	//logconfig["maxdays"] = 7
+	//logconfig["level"] = logs.LevelInfo
+	//configstr, err := json.Marshal(logconfig)
+	//if err == nil {
+	//	_ = logs.SetLogger(logs.AdapterFile, string(configstr))
+	//}
+	//_ = logs.GetBeeLogger().DelLogger(logs.AdapterConsole)
+	//logs.SetLogFuncCall(true)
+
+	//myfunc.GetData()
+    	//myfunc.MD5("111111")
+    	//mycontroller.ImageSub()
+    	//fmt.Println(mycontroller.ImageResize())
+    	//a, b :=myfunc.GetMonSunday(0)
+    	//fmt.Println(a, b)
+
+// download
+// http://127.0.0.1:9090/download?filename=public/File/chromedriver_win32.zip
+
+-------
+//  go sync
+var w sync.WaitGroup
+
+func work(n int64,str string){
+	time.Sleep(time.Duration(n * 1000 * 1000))
+	fmt.Println(str)
+	w.Done()
+}
+
+// sync work to do test
+func runsynctask(){
+	for i:=0;i<10;i++{
+		w.Add(1)
+		{
+			go work(int64((3+2)*1000), strconv.Itoa(i) +" 工作:" + strconv.Itoa(i+2) +" 秒")
+		}
+	}
+	//w.Add(2)
+	//{
+	//	go work(5000, "1 工作；5 秒")
+	//	go work(3000, "2 工作：3 秒")
+	//}
+	w.Wait()
+	//fmt.Println("[全部工作完]：用时 5 秒")
+}
+
+func main(){
+    t1 := time.Now().UnixNano() / int64(time.Millisecond)
+	fmt.Println(t1)
+	runsynctask()
+	t2 := time.Now().UnixNano() / int64(time.Millisecond)
+	fmt.Println(t2)
+	fmt.Println("used:", t2 - t1)
+	fmt.Println(myfunc.GetMillionSecond(time.Now()))
+	fmt.Println("cpu:", runtime.NumCPU())
+}
