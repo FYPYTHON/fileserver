@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Decode</title>
+    <script type="text/javascript" src="{{static_url('js/jquery.min.js')}}"></script>
+</head>
+<body>
+<div>
+	<input name="destr" id="destr" style="width:400px;"/>
+	<button onclick="testdecode()">解密</button>
+	<br/>
+	<label id="result" name="result"></label>
+	<div>
+		<table class="table" id="mytable">
+      <thead>
+          <tr class="center">
+            <th>ID</th>
+            <th>Msg</th>
+            <th>Key</th>
+            <th>Code</th>
+            <th></th>
+          </tr>
+      </thead>
+      <tbody>
+      {% for code in codelist %}
+        <tr class="center">
+        <td>{{ code.id }}</td>
+        <td>{{ code.msg }}</td>
+        <td>{{ code.key }}</td>
+        <td>{{ code.code }}</td>
+        <td >
+          <a class="btn btn-danger"  href="#" onclick="mydecode('{{code.code}}')">
+            <i class="icon-trash icon-white"></i>
+            Decode
+          </a>
+        </td>
+        </tr>
+      {% end %}
+      </tbody>
+    </table>
+	</div>
+</div>
+</body>
+
+<script type="text/javascript">
+	function mydecode(destr){
+		// console.log("mydecode");
+		$.ajax({
+			type: "Post",
+			url: "/decode",
+			data: {"destr": destr},
+			dataType : "json",
+			success: function (data) {
+				$("#result").html(data.decode);
+			}
+		});
+	};
+	function testdecode(){
+		// console.log("mydecode");
+		var destr = $("#destr").val();
+		$.ajax({
+			type: "Post",
+			url: "/decode",
+			data: {"destr": destr},
+			dataType : "json",
+			success: function (data) {
+				$("#result").html(data.decode);
+			}
+		});
+	}
+</script>
+</html>

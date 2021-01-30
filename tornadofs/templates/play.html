@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% block title %}
+    <title>Play</title>
+    {% end %}
+    <script src="{{static_url('js/jquery.min.js')}}"></script>
+    <script src="{{static_url('js/bootstrap.min.js')}}"></script>
+    <link rel="stylesheet" href="{{static_url('css/bootstrap.min.css')}}">
+    <link rel="stylesheet" type="text/css" href="{{static_url('css/fscss/common.css')}}">
+    {% block js-css %}
+    {% end %}
+
+    <script type="text/javascript">
+    	localStorage.setItem("iwidth", "{{iwidth}}");
+    	localStorage.setItem("iheight", "{{iheight}}");
+    	function fszoom(action){
+    		// console.log("{{uri}}");
+    		// zoom = "zoomin";
+    		if (action == 1){
+    			zoom = "zoomin";
+    		}else
+    		{
+    			zoom = "zoomout"
+    		}
+    		iwidth = localStorage.getItem("iwidth", "{{iwidth}}");
+    		iheight = localStorage.getItem("iheight", "{{iheight}}");
+    		// console.log(iwidth, iheight);
+    		$.ajax({
+                type: "POST",
+                url: "/show" + "/{{uri}}",
+                dataType : "json",
+                async: true,
+                // data: {"action": zoom, "iwidth": "{{iwidth}}", "iheight":"{{iheight}}"},
+                data: {"action": zoom, "iwidth": iwidth, "iheight":iheight},
+                success: function (data){
+                	// console.log(data.msg);
+                	$("#srcimg").attr('src', data.img);
+                	iwidth = data.iwidth;
+                	iheight = data.iheight;
+                	localStorage.setItem("iwidth", iwidth);
+    				localStorage.setItem("iheight", iheight);
+    				$("#imgsize").html(iwidth + "×" + iheight);
+                }
+            })
+    	}
+    </script>
+
+</head>
+
+<body>
+<div container-fluid>
+<div class="row-fluid">
+	<br />
+	<div class="col-sm-12">
+		<div class="col-sm-2"></div>
+		<div class="col-sm-8 fsimg testonly">
+			<video id="video-player" controls="controls" autoplay="autoplay">
+                <source src="{{vsrc}}" type="video/mp4" />
+                Your browser does not support the video tag.
+            </video>
+		</div>
+		<div class="col-sm-2"></div>
+
+		<!-- {% if type == "img" %} -->
+		<div class="col-sm-4"></div>
+		<div class="col-sm-4">
+			<button type="button" class="btn btn-default btn-sm">
+          		<span class="glyphicon glyphicon-zoom-in"></span>
+        	</button>
+        	<label id="imgsize">{{iwidth}}×{{iheight}}</label>
+        	<button type="button" class="btn btn-default btn-sm">
+          		<span class="glyphicon glyphicon-zoom-out"></span>
+        	</button>
+		</div>
+		<div class="col-sm-4"></div>
+		<!-- {% end %} -->
+	</div>
+
+</div>
+</div>
+
+</body>
+</html>

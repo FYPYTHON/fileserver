@@ -1,0 +1,47 @@
+.testonly{
+	border: solid 1px black;
+	color:black;
+}
+.fsimg {
+	min-height: 400px;
+	min-width: 400px;
+	max-height: 800px;
+	max-width: 800px;
+}
+.fsdoc {
+	min-height: 600px;
+	min-width: 800px;
+	max-height: 800px;
+	max-width: : 1000px;
+}
+.filepath input{
+	min-width: 200px;
+	max-width: : 400px;
+}
+.hnavli {
+	margin-right: 20px;
+}
+.showli li {
+	margin-left: -20px;
+}
+.shortcut {
+	margin-top: 2px;
+	margin-bottom: 2px;
+	margin-right: 10px;
+    width: 30px;
+    height: 30px;
+    max-width: 50px;
+    max-height: 50px;
+}
+textarea {
+	min-height: 580px;
+	min-width: 780px;
+	max-height: 780px;
+	max-width: : 980px;
+}
+video {
+	min-height: 400px;
+	min-width: 400px;
+	max-height: 600px;
+	max-width: : 800px;
+}

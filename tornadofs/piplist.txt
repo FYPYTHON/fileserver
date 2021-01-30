@@ -1,0 +1,12 @@
+tornado
+sqlalchemy
+pymysql
+jinja2
+pillow
+opencv-python
+yum install libSM-1.2.2-2.el7.x86_64 --setopt=protected_multilib=false
+yum -y install libXrender-0.9.10-1.el7.i686
+psutil
+setproctitle
+requests
+bs4

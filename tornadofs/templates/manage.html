@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+<!--/project/list 二级目录有问题-->
+{% block title%}
+<title>Manage</title>
+{% end %}
+
+{% block js-css %}
+<script type="text/javascript" src='{{static_url("js/fs/jquery.form.js")}}' charset="UTF-8"></script>
+{% end %}
+
+{% block header %}
+	{% if userinfo is None %}
+		<button class="btn">登录</button>
+	{% else %}
+		<button class="btn">{{userinfo.nickname}}</button>
+		<button class="btn dropdown-toggle" data-toggle="dropdown" style="margin-left: -7px;">
+			<span class="caret"></span>
+		</button>
+		<ul class="dropdown-menu">
+			<li><a>个人信息</a></li>
+			<li><a href="/fsmain">我的主页</a></li>
+			<li class="divider"></li>
+			<li><a>设置</a></li>
+			<li><a href="/logout">退出</a></li>
+		</ul>
+	{% end %}
+{% end %}
+
+{% block to-home %}
+<div class="col-sm-2">
+	<a href="/fsmain?curpath={{curpath}}">返回主页</a>
+	<a href="/history">浏览历史</a>
+</div>
+{% end %}
+
+{% block content-body %}
+<div class="box-content">
+    <a href="#" onclick="newuser()"><i class="icon-pencil"></i>添加账号</a>
+    <hr>
+    <table class="table" id="mytable">
+      <thead>
+          <tr class="center">
+            <th>ID</th>
+            <th>loginname</th>
+            <th>nickname</th>
+            <th>Email</th>
+            <th>User State</th>
+            <th>User Role</th>
+            <th>Register Time</th>
+          </tr>
+      </thead>
+      <tbody>
+      {% for user in users %}
+        <tr class="center">
+        <td>{{ user.id }}</td>
+        <td>{{ user.loginname }}</td>
+        <td>{{ user.nickname }}</td>
+        <td>{{ user.email }}</td>
+        <td >{% if user.userstate == 0 %}normal{% else %}disable{% end %}</td>
+        <td >{% if user.userrole == 0 %}administrator{% else %}consumer{% end %}</td>
+        <td >{{ user.register_time }}</td>
+        <td >
+<!--          <a class="btn btn-info" href="/user/edit/{{ user.id }}" onclick="showuseredit('{{user.id}}')">-->
+<!--            <i class="icon-edit icon-white"></i>-->
+<!--            Edit-->
+<!--          </a>-->
+          <a class="btn btn-info" href="#" onclick="showuseredit('{{user.id}}')">
+           <i class="icon-edit icon-white"></i>
+            Edit
+          </a>
+<!--          <a class="btn btn-danger" href="/user/delete/{{ user.id }}">-->
+<!--            <i class="icon-trash icon-white"></i>-->
+<!--            Delete-->
+<!--          </a>-->
+          <a class="btn btn-danger" href="#" onclick="userdelete('{{user.id}}')">
+            <i class="icon-trash icon-white"></i>
+            Delete
+          </a>
+        </td>
+        </tr>
+      {% end %}
+      </tbody>
+    </table>
+</div>
+<!-- modal div -->
+<div class="modal fade" id="userModal" tabindex="-1" role="dialog" aria-label="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+	<div class="modal-content">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				<span aria-hidden="true">&times;</span>
+			</button>
+			<h4 class="modal-title" id="myModalTitle">用户信息</h4>
+		</div>
+		<div class="modal-body">
+			<label for="account">账号：</label>
+			<input type="text" name="account" class="" id="account" readonly="true" value="">
+            <br />
+            <label for="nickname">昵称：</label>
+			<input type="text" name="nickname" class="" id="nickname"  value="">
+			<br />
+			<label for="email">邮箱：</label>
+			<input type="text" name="email" class="" id="email" value="">
+            <label for="code">验证码：</label>
+			<input type="text" name="code" class="" id="code" value="">
+			<br />
+            <label for="password">重置密码：</label>
+			<input type="text" name="password" class="" id="password" value="">
+            <label for="confirmpassword">确认密码：</label>
+			<input type="text" name="confirmpassword" class="" id="confirmpassword" value="">
+			<br />
+		</div>
+		<div class="modal-footer">
+			<button type="button" class="btn btn-default" data-dismiss="modal">
+				<span class="glyphicon glyphicon-remove" aria-hidden="true">关闭</span>
+			</button>
+			<button id="btn_rename" type="button" class="btn btn-primary" data-dismiss="modal" onclick="useredit()">
+				<span class="glyphicon glyphicon-ok" aria-hidden="true">确认</span>
+			</button>
+		</div>
+	</div>
+	</div>
+</div>
+{% end %}
+
+{% block func %}
+<script type="text/javascript">
+    function showuseredit(id){
+        $.ajax({
+	        type: "GET",
+	        url: "/user/" + id,
+	        dataType : "json",
+	        async: true,
+	        data: {},
+	        success: function (data){
+	       		if (data.error_code == 1){
+	       			alert(data.msg);
+	       		}else{
+	       		    console.log(data.user.loginname);
+	       			$("#account").val(data.user.loginname);
+	       			$("#nickname").val(data.user.nickname);
+	       			$("#email").val(data.user.email);
+	       			$("#userModal").modal();
+	       		}
+	        }
+	    })
+        // $("#account").val('{{user.loginname}}');
+    }
+    function newuser(){
+        $("#account").val("");
+	    $("#nickname").val("");
+	    $("#email").val("");
+	    $("#password").val("");
+        $("#userModal").modal();
+        document.getElementById("account").readOnly=false;
+    }
+    function useredit(){
+        var loginname = $("#account").val();
+	    var nickname = $("#nickname").val();
+	    var email = $("#email").val();
+	    var password = $("#password").val();
+        document.getElementById("account").readOnly=true;
+
+	    $.ajax({
+	        type: "POST",
+	        url: "/manage",
+	        dataType : "json",
+	        async: true,
+	        data: {"loginname": loginname, "nickname": nickname, "email": email, "password": password},
+	        success: function (data){
+	       		if (data.error_code == 1){
+	       			alert(data.msg);
+	       		}else{
+	       		    alert(data.msg);
+	       		    window.location.href = "/manage?curpath=" + "{{curpath}}";
+	       		}
+	        }
+	    })
+    }
+    function userdelete(id){
+        $.ajax({
+            type: "DELETE",
+	        url: "/user/delete/"+ id,
+	        dataType : "json",
+	        async: true,
+	        data: {},
+	        success: function (data){
+	       		if (data.error_code == 1){
+	       			alert(data.msg);
+	       		}else{
+	       		    alert(data.msg);
+	       		    window.location.href = "/manage?curpath=" + "{{curpath}}";
+	       		}
+	        }
+        })
+    }
+</script>
+{% end %}

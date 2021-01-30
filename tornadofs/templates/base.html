@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% block title %}
+    <title>Home</title>
+    {% end %}
+    <link rel="stylesheet" href="{{static_url('css/bootstrap.min.css')}}">
+    <link rel="stylesheet" href="{{static_url('css/fscss/common.css')}}">
+    <script src="{{static_url('js/jquery.min.js')}}"></script>
+    <script src="{{static_url('js/bootstrap.min.js')}}"></script>
+    {% block js-css %}
+    {% end %}
+
+</head>
+<body>
+<header>
+	<div class="divheader debug">
+		<div class="col-md-8 debug"></div>
+		<div class="col-md-4 debug">
+		{% block header %}
+		{% end %}
+			<label style="width: 160px;float: right;margin-top: 10px;margin-right: 20px;"><span id="currentdate" ></span></label>
+		</div>
+	</div>
+</header>
+<div class="container-fluid debug">
+	<div class="row-fluid">
+		<!-- nav -->
+		<div class="col-md-11 e-nav">
+			<div class="col-sm-7">
+				<label>当前路径：</label>
+				<label id="curpath">{{curpath}}</label>
+			</div>
+			<div class="col-sm-4">
+				<label>已用信息：</label>
+				<label id="useage">{{useage}}</label>
+			</div>
+			{% block to-home %}
+			{% end %}
+		</div>
+
+		<!-- left -->
+		<div class="col-md-1 col-lg-1"></div>
+		<!-- main -->
+		<div class="col-md-10 col-lg-10 debug">
+			{% block content-nav %}
+			{% end %}
+<!--			{% block main %}-->
+			<div class="col-md-12 col-lg-12">
+				<hr style="filter: alpha(opacity=100,finishopacity=0,style=2)" width="100%" color="#6f5499" size="10"/>
+			</div>
+			{% block content-body %}
+			{% end %}
+			<div class="col-md-12 col-lg-12">
+				<hr style="filter: alpha(opacity=100,finishopacity=0,style=2)" width="100%" color="#6f5499" size="10"/>
+			</div>
+<!--			{% end %}-->
+		</div>
+		<!-- right -->
+		<div class="col-md-1 col-lg-1"></div>
+	</div>
+</div>
+
+</body>
+{% block func %}
+{% end %}
+</html>

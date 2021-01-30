@@ -1,0 +1,434 @@
+{% extends "base.html" %}
+
+<!--/project/list 二级目录有问题-->
+{% block title%}
+<title>Home</title>
+{% end %}
+
+
+{% block js-css %}
+<script src="{{static_url('js/fs/fsmain.js')}}"></script>
+{% end %}
+
+{% block header %}
+{% if userinfo is None %}
+<button class="btn">登录</button>
+{% else %}
+<button class="btn">{{userinfo.nickname}}</button>
+<button class="btn dropdown-toggle" data-toggle="dropdown" style="margin-left: -7px;">
+    <span class="caret"></span>
+</button>
+{% if userinfo.userrole == 0 %}
+<button class="btn"><a href="/manage?curpath={{curpath}}">管理</a></button>
+{% end %}
+<ul class="dropdown-menu">
+    <li><a>个人信息</a></li>
+    <li><a href="/fsmain">我的主页</a></li>
+    <li><a href="/view">我的数据</a></li>
+    <li class="divider"></li>
+    <li><a>设置</a></li>
+    <li><a href="/logout">退出</a></li>
+</ul>
+{% end %}
+{% end %}
+
+{% block content-nav %}
+<!-- <h1>NO NEW CONTENT</h1> -->
+{% end %}
+
+{% block content-body %}
+<div class="col-sm-2">
+    <a href="/fsmain?curpath={{curpath}}&action=super">上一级</a>
+</div>
+<div class="col-sm-8">
+    <a href="/upload?curpath={{curpath}}" class="hnavli"><span class="glyphicon glyphicon-cloud-upload"
+                                                               target="_blank"></span>上传</a>
+    <a href="" class="hnavli" onclick="fsdownload()"><span class="glyphicon glyphicon-cloud-download"></span>下载</a>
+    <button type="button" class="btn btn-link hnavli" onclick="fsmove()"><span class="glyphicon glyphicon-move"></span>移动
+    </button>
+    <button type="button" class="btn btn-link hnavli" onclick="fsrenameshow()"><span
+            class="glyphicon glyphicon-edit"></span>重命名
+    </button>
+    <button type="button" class="btn btn-link hnavli" onclick="fscreateshow()"><span
+            class="glyphicon glyphicon-folder-open"></span>新建
+    </button>
+    {% if userinfo.userrole == 0 %}
+    <button type="button" class="btn btn-link hnavli" onclick="fsdelete('{{curpath}}')"><span
+            class="glyphicon glyphicon-remove"></span>删除
+    </button>
+    {% end %}
+</div>
+<div class="col-md-12 col-lg-12">
+    <hr style="filter: alpha(opacity=100,finishopacity=0,style=2)" width="100%" color="#6f5499" size="10"/>
+</div>
+
+<div class="col-md-12 col-sm-12 showli">
+    <ul id="fsul">
+        {% for dir in dirs %}
+
+        <li class="col-md-11" style="list-style:none;">
+            <input class="col-md-1" name="{{dir}}" type="checkbox" value="{{dir}}"/>
+            <img class="shortcut" id="foldershortcut"
+                 src="{{static_url('img/filedialog_folder.png')}}"
+                 alt="">
+            <a href="/fsmain?curpath={{curpath}}/{{dir}}">{{dir}}</a>
+        </li>
+        {% end %}
+
+        {% for i, file in enumerate(files) %}
+        {% if file.split(".")[-1].lower() == "mp4" %}
+        <li class="col-md-11" style="list-style:none;">
+            <input class="col-md-1" name="{{file}}" type="checkbox" value="{{file}}"/>
+            <img class="shortcut" id="shortcutvideo" src="{{static_url('img/default_video.jpg')}}" alt="{{file}}">
+            <a href="/play/{{curpath}}/{{file}}" target="_blank">{{file}}</a></li>
+        {% elif file.split(".")[-1].lower() in ["jpg", "jpeg", "png"] %}
+
+        <li class="col-md-11" style="list-style:none;">
+            <input class="col-md-1" name="{{file}}" type="checkbox" value="{{file}}"/>
+<!--            <img class="shortcut" id="shortcutimg" src="{{static_url('img/default_image.jpg')}}" alt="{{file}}">-->
+            <img class="shortcut" id="shortcutimg" src="{{shortcut_list[i]}}" alt="{{file}}">
+            <a href="/show/{{curpath}}/{{file}}" target="_blank">{{file}}</a>
+        </li>
+        {% else %}
+        <li class="col-md-11" style="list-style:none;">
+            <input class="col-md-1" name="{{file}}" type="checkbox" value="{{file}}"/>
+			<img class="col-md-1 shortcut" id="shortcutfile" src="{{static_url('img/filedialog_file.png')}}" alt="{{file}}">
+            <a href="/show/{{curpath}}/{{file}}" target="_blank">{{file}}</a>
+        </li>
+        {% end %}
+        {% end %}
+    </ul>
+
+</div>
+<!--page-->
+<div class="col-sm-12">
+      <div class="col-sm-8">
+
+      </div>
+      <div class="col-sm-4">
+        <!-- <button onclick="prevpage()">上一页</button> -->
+        <a href="/fsmain?curpath={{curpath}}&page={{page - 1}}">上一页</a>
+        <label>总页数：{{page}}/{{total}}</label>
+        <a href="/fsmain?curpath={{curpath}}&page={{page + 1}}">下一页</a>
+      </div>
+</div>
+<!-- modal div -->
+<div class="modal fade" id="renameModal" tabindex="-1" role="dialog" aria-label="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalTitle">重命名</h4>
+            </div>
+            <div class="modal-body">
+                <label for="oldname">旧名称</label>
+                <input type="text" name="oldname" class="" id="oldname" readonly="true" value="">
+                <label type="text" name="oldsuffix" class="" id="oldsuffix" readonly="true" value=""></label>
+                <br/>
+                <label for="newname">新名称</label>
+                <input type="text" name="newname" class="" id="newname" value="" placeholder="输入新名称">
+                <label type="text" name="newsuffix" class="" id="newsuffix" readonly="true" value=""></label>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <span class="glyphicon glyphicon-remove" aria-hidden="true">关闭</span>
+                </button>
+                <button id="btn_rename" type="button" class="btn btn-primary" data-dismiss="modal" onclick="rename()">
+                    <span class="glyphicon glyphicon-ok" aria-hidden="true">确认</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 模态框（Modal） -->
+<div class="modal fade" id="moveModal" tabindex="-1" role="dialog" aria-labelledby="moveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    &times;
+                </button>
+                <h4 class="modal-title" id="myModalLabel">
+                    移动
+                </h4>
+            </div>
+            <div class="modal-body">
+                <label for="oldname">当前文件或路径</label>
+                <input type="text" name="oldpath" class="filepath" id="oldpath" readonly="true" value="">
+                <br/>
+                <label for="newname">移动至路径</label>
+                <input type="text" name="newpath" class="filepath" id="newpath" value="" placeholder="新名称">
+                <br/>
+                <ul id="ulmovepath">
+                </ul>
+                <button onclick="getdir('super')">显示上一级</button>
+                <button onclick="getdir('subor')">显示下一级</button>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭
+                </button>
+                <button type="button" class="btn btn-primary" onclick="move()">
+                    提交更改
+                </button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+<!-- create modal -->
+<div class="modal fade" id="createModal" tabindex="-1" role="dialog" aria-label="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalTitle2">创建</h4>
+            </div>
+            <div class="modal-body">
+                <label for="createname">名称</label>
+                <input type="text" name="createname" class="" id="createname" value="" placeholder="输入名称">
+                <label type="text" name="newsuffix" class="" id="newsuffix2" readonly="true" value=""></label>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <span class="glyphicon glyphicon-remove" aria-hidden="true">关闭</span>
+                </button>
+                <button id="btn_rename2" type="button" class="btn btn-primary" data-dismiss="modal"
+                        onclick="createdir()">
+                    <span class="glyphicon glyphicon-ok" aria-hidden="true">确认</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% end %}
+
+{% block func %}
+<script type="text/javascript">
+function getCheckedlist(){
+	var fchecks = []
+	var fsul = document.getElementById("fsul");
+	var flist = fsul.getElementsByTagName('input');
+	for(var i = 0; i < flist.length; i++) {
+		// console.log(i);
+	 //    console.log(flist[i].checked);
+	    if (flist[i].checked == true){
+	    	fchecks.push("{{curpath}}"+ "/" + flist[i].value);
+	    }
+	    
+	}
+	return fchecks;
+}
+var fchecks = getCheckedlist();
+// console.log(fchecks);
+function download(filename){
+		$.ajax({
+	        type: "POST",
+	        url: "/download",
+	        dataType : "json",
+	        async: true,
+	        data: {"filename": filename},
+	        success: function (data){
+	        	// console.log(data.msg);
+	       		if (data.code == 1){
+	       			alert(data.msg);
+	       		}
+	        }
+	    })
+    }	
+function fsdownload(){
+	var flist = getCheckedlist();
+	console.log(flist);
+	if (flist.length <= 0){
+		alert("请选择文件");
+		return 0;
+	}
+	else if (flist.length > 1){
+		alert("不支持多个文件");
+		return 0;
+	}
+	else {
+
+
+		for(var i = 0; i < flist.length; i++) {
+			//console.log(flist[i]);
+			// alert(flist[i]);
+	    	// download(flist[i]);
+	    	window.open("/download?filename=" + encodeURI(flist[i]));
+	    	// alert(encodeURI(flist[i]));
+	    	// window.location.href = "/download?filename=" + flist[i];
+
+	    	//var file = flist[i].split("/");
+	    	//var name = file[file.length - 1 ];
+	    	// alert(name);
+	    	//var a = document.createElement('a');
+			//a.setAttribute('href', "/download?filename=" + encodeURI(flist[i]));
+			//a.setAttribute('target', "_blank");
+			//a.setAttribute('download', name);
+			//a.click();
+		}
+	}
+}
+function getdir(action){
+	// curpath = "{{curpath}}";
+	newpath = $("#newpath").val();
+	oldpath = $("#oldpath").val();
+	console.log(newpath);
+	console.log(oldpath);
+	if (newpath == ""){
+		newpath = "{{curpath}}";
+	}
+	$.ajax({
+        type: "GET",
+        url: "/move",
+        dataType : "json",
+        async: true,
+        data: {"curpath": newpath, "action": action},
+        success: function (data){
+        	// console.log(data.msg);
+       		if (data.code == 1){
+       			alert(data.msg);
+       		}else{
+       			var movepaths = data.movepaths;
+       			// movepathul = $("#ulmovepath").html("")
+       			$("#ulmovepath").html("暂无目录");
+				var newulhtml = ""
+				for(var i = 0; i < movepaths.length; i++) {
+					newulhtml += '<li style="list-style:none;">'+ movepaths[i] + '</li>';
+				}
+				$("#ulmovepath").html(newulhtml).css("color", "black");
+				if (movepaths.length == 0){
+
+					$("#ulmovepath").html("暂无目录").css("color", "red");;
+				}
+				$("#newpath").val(data.newpath);
+       		}
+        }
+    })
+}
+function move(){
+	curpath = "{{curpath}}";
+	oldpath = $("#oldpath").val();
+	newpath = $("#newpath").val();
+	$.ajax({
+        type: "POST",
+        url: "/move",
+        dataType : "json",
+        async: true,
+        data: {"oldpath": oldpath, "newpath": newpath},
+        success: function (data){
+        	// console.log(data.msg);
+       		if (data.code == 1){
+       			alert(data.msg);
+       		}else{
+				alert(data.msg);
+				window.location.href = "/fsmain?curpath={{curpath}}";
+       		}
+        }
+    })
+}
+function fsmove(){
+	console.log("move");
+	var flist = getCheckedlist();
+	if (flist.length <= 0){
+		alert("请选择文件！");
+		return 0;
+	}else if (flist.length > 1){
+		alert("不能多选！")
+	}else{
+		var temp = flist[0];
+		// var pathnow = "{{curpath}}" + "/" + temp;
+		$("#oldpath").val(temp);
+		$("#newpath").val(temp);
+	}
+	// getdir("curpath");
+
+
+	$("#moveModal").modal();
+}
+function rename(){
+	oldname = $("#oldname").val();
+	oldsuffix = $("#oldsuffix").html();
+	console.log(oldsuffix, "rename");
+	newname = $("#newname").val();
+	if (newname == ""){
+		alert("新名称不能为空");
+	} else{
+		$.ajax({
+	        type: "POST",
+	        url: "/rename",
+	        dataType : "json",
+	        async: true,
+	        data: {"oldname": oldname + oldsuffix, "newname": newname + oldsuffix, "curpath":"{{curpath}}"},
+	        success: function (data){
+	        	// console.log(data.msg);
+	       		if (data.code == 1){
+	       			alert(data.msg);
+	       		}else{
+	       			window.location.href = "/fsmain?curpath={{curpath}}"
+	       		}
+	        }
+	    })
+	}
+}
+function fsrenameshow(){
+	console.log("rename");
+	var flist = getCheckedlist();
+	if (flist.length <= 0){
+		alert("请选择文件！");
+		return 0;
+	}else if (flist.length > 1){
+		alert("不能多选！")
+	}else{
+		var temp = flist[0].split("/")
+		// var flen = temp.length
+		// var foldname = temp[temp.length - 1].split(".")
+		// console.log(foldname);
+		var FileName = temp[temp.length - 1]
+		var index1=FileName.lastIndexOf(".");
+		var index2=FileName.length;
+		if (index1 == -1){
+			index1 = index2;
+		}
+		var prefix=FileName.substring(0, index1); // 前面部分
+		var suffix=FileName.substring(index1, index2);//后缀名
+		console.log(prefix, suffix, index1, index2);
+
+		$("#oldsuffix").html(suffix)
+		$("#newsuffix").html(suffix)
+		$("#oldname").val(prefix);
+		$("#renameModal").modal();
+	}
+}
+function fscreateshow(){
+	console.log("create");
+
+	$("#createModal").modal();
+}
+function createdir(){
+	newname = $("#createname").val();
+	if (newname == ""){
+		alert("名称不能为空");
+	} else{
+		$.ajax({
+	        type: "POST",
+	        url: "/createdir",
+	        dataType : "json",
+	        async: true,
+	        data: {"newname": newname, "curpath":"{{curpath}}"},
+	        success: function (data){
+	        	// console.log(data.msg);
+	       		if (data.code == 1){
+	       			alert(data.msg);
+	       		}else{
+	       			window.location.href = "/fsmain?curpath={{curpath}}"
+	       		}
+	        }
+	    })
+	}
+}
+
+</script>
+{% end %}

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+<!--/project/list 二级目录有问题-->
+{% block title%}
+<title>Manage</title>
+{% end %}
+
+{% block js-css %}
+<script type="text/javascript" src='{{static_url("js/fs/jquery.form.js")}}' charset="UTF-8"></script>
+<script type="text/javascript" src='{{static_url("js/fs/history.js")}}' charset="UTF-8"></script>
+{% end %}
+
+{% block header %}
+	{% if userinfo is None %}
+		<button class="btn">登录</button>
+	{% else %}
+		<button class="btn">{{userinfo.nickname}}</button>
+		<button class="btn dropdown-toggle" data-toggle="dropdown" style="margin-left: -7px;">
+			<span class="caret"></span>
+		</button>
+		<ul class="dropdown-menu">
+			<li><a>个人信息</a></li>
+			<li><a href="/fsmain">我的主页</a></li>
+			<li class="divider"></li>
+			<li><a>设置</a></li>
+			<li><a href="/logout">退出</a></li>
+		</ul>
+	{% end %}
+{% end %}
+
+{% block to-home %}
+<div class="col-sm-2">
+	<a href="/fsmain?curpath={{curpath}}">返回主页</a>
+</div>
+{% end %}
+
+{% block content-body %}
+<div class="box-content">
+    <hr>
+    <table class="table" id="mytable" style="table-layout:fixed;">
+      <thead>
+          <tr class="center">
+            <th>ID</th>
+            <th>User IP</th>
+            <th>Loginname</th>
+            <th>Method</th>
+            <th>URL</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>User Agent</th>
+          </tr>
+      </thead>
+      <tbody>
+      {% for user in historys %}
+        <tr class="center">
+            <td>{{ user.id }}</td>
+            <td >{{ user.user_ip }}</td>
+            <td>{{ user.user_account }}</td>
+            <td>{{ user.uri }}</td>
+            <td style="word-wrap:break-word" width="200">{{ user.request_method.split('?')[0] }}</td>
+            <td>{{ user.browsing_date }}</td>
+            <td>{{ user.browsing_time }}</td>
+            <td>{% if 'Android' in user.user_agent or 'Mobile' in user.user_agent %}APP{% else %}WEB{% end %}</td>
+        </tr>
+      {% end %}
+      </tbody>
+    </table>
+</div>
+<div class="col-sm-12">
+      <div class="col-sm-8">
+
+      </div>
+      <div class="col-sm-4">
+        <!-- <button onclick="prevpage()">上一页</button> -->
+        <a href="/history?curpath={{curpath}}&page={{page - 1}}">上一页</a>
+        <label>总页数：{{page}}/{{total}}</label>
+        <a href="/history?curpath={{curpath}}&page={{page + 1}}">下一页</a>
+      </div>
+</div>
+{% end %}
+
+{% block func %}
+<script type="text/javascript">
+</script>
+{% end %}

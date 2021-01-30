@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+<!--/project/list 二级目录有问题-->
+{% block title%}
+<title>Upload</title>
+{% end %}
+
+
+{% block js-css %}
+<script type="text/javascript" src='{{static_url("js/fs/jquery.form.js")}}' charset="UTF-8"></script>
+{% end %}
+
+{% block header %}
+	{% if userinfo is None %}
+		<button class="btn">登录</button>
+	{% else %}
+		<button class="btn">{{userinfo.nickname}}</button>
+		<button class="btn dropdown-toggle" data-toggle="dropdown" style="margin-left: -7px;">
+			<span class="caret"></span>
+		</button>
+		<ul class="dropdown-menu">
+			<li><a>个人信息</a></li>
+			<li><a href="/fsmain">我的主页</a></li>
+			<li class="divider"></li>
+			<li><a>设置</a></li>
+			<li><a href="/logout">退出</a></li>
+		</ul>
+	{% end %}
+{% end %}
+
+{% block to-home %}
+<div class="col-sm-2">
+	<a href="/fsmain?curpath={{curpath}}">返回主页</a>
+</div>
+{% end %}
+
+{% block content-body %}
+<form id="upload_form" name="form" action="/upload" method="POST" enctype="multipart/form-data" accept-charset="utf-8">
+    <div id="main">
+    	<label>上传路径：</label>
+    	<input type="text" name="curpath" value="{{curpath}}">
+    	<br />
+        <input name="files" id="my_file" type="file" multiple = "multiple" />
+        <input type="submit" value="上传"/>
+        <br />
+        <label class="upres" name="upres"></label>
+    </div>
+</form>
+{% end %}
+
+{% block func %}
+<script type="text/javascript">
+	$('#upload_form').ajaxForm({                                        //jquery.form.js，表单提交插件，会自动阻止跳转
+        url: '/upload',                                                //设置提交的 url，可覆盖 action 属性
+        type: 'POST',                                               //GET,POST
+        beforeSubmit: function (formData, jqForm, options) {        //提交前的验证
+        	formData = $('#upload_form').serialize()
+        	formData = decodeURIComponent(formData,true);//一次转码
+        	formData = encodeURI(encodeURI(formData)); //两次转码
+        	$('.upres').html("");
+        },
+        success: function (responseText, statusText) {              //提交成功后的操作
+        	// console.log(responseText);
+ 
+    		curval = $('.upres').html();
+    		$('.upres').html(curval + responseText);
+ 
+            // $('.upres').html(responseText);                         //将服务器返回路径写入输入框
+        },
+        error: function (event, errorText, errorType) {             //错误时调用,提交失败的操作
+
+        }
+    });
+</script>
+{% end %}
